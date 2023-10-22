@@ -216,7 +216,7 @@ class MethodChannelVideoPlayer extends VideoPlayerPlatform {
           <String, dynamic>{'textureId': textureId},
         ) ??
         0;
-
+    if (milliseconds > 8640000000000000 || milliseconds < -8640000000000000) return null;
     if (milliseconds <= 0) return null;
 
     return DateTime.fromMillisecondsSinceEpoch(milliseconds);
