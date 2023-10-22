@@ -381,15 +381,10 @@ internal class BetterPlayer(
         cacheKey: String?,
         context: Context
     ): MediaSource {
-        val type: Int
-        if (formatHint == null) {
-            var lastPathSegment = uri.lastPathSegment
-            if (lastPathSegment == null) {
-                lastPathSegment = ""
-            }
-            type = Util.inferContentType(lastPathSegment)
-        } else {
-            type = when (formatHint) {
+        val type = if (formatHint == null) {
+          Util.inferContentType(uri)
+        }else {
+             when (formatHint) {
                 FORMAT_SS -> C.TYPE_SS
                 FORMAT_DASH -> C.TYPE_DASH
                 FORMAT_HLS -> C.TYPE_HLS
