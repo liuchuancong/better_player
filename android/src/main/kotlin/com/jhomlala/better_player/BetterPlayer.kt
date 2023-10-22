@@ -78,7 +78,8 @@ internal class BetterPlayer(
 ) {
     private val exoPlayer: ExoPlayer?
     private val eventSink = QueuingEventSink()
-    private val trackSelector: DefaultTrackSelector = DefaultTrackSelector(context)
+    private val trackSelector: DefaultTrackSelector =
+        DefaultTrackSelector(context)
     private val loadControl: LoadControl
     private var isInitialized = false
     private var surface: Surface? = null
@@ -137,7 +138,10 @@ internal class BetterPlayer(
         val userAgent = getUserAgent(headers)
         if (licenseUrl != null && licenseUrl.isNotEmpty()) {
             val httpMediaDrmCallback =
-                HttpMediaDrmCallback(licenseUrl, DefaultHttpDataSource.Factory())
+                HttpMediaDrmCallback(
+                    licenseUrl,
+                    DefaultHttpDataSource.Factory()
+                )
             if (drmHeaders != null) {
                 for ((drmKey, drmValue) in drmHeaders) {
                     httpMediaDrmCallback.setKeyRequestProperty(drmKey, drmValue)
