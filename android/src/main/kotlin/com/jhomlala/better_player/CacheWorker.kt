@@ -74,7 +74,7 @@ class CacheWorker(
                 return Result.failure()
             }
         } catch (exception: Exception) {
-            Log.e(TAG, exception.toString())
+            Log.e(TAG, "Preloading only possible for remote data sources:$exception")
             return if (exception is HttpDataSourceException) {
                 Result.success()
             } else {

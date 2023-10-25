@@ -21,6 +21,7 @@ import io.flutter.view.TextureRegistry.SurfaceTextureEntry
 import io.flutter.plugin.common.MethodChannel
 import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.ui.PlayerNotificationManager
+import android.media.session.MediaSession
 import android.support.v4.media.session.MediaSessionCompat
 import com.google.android.exoplayer2.drm.DrmSessionManager
 import androidx.work.WorkManager
@@ -624,9 +625,12 @@ internal class BetterPlayer(
      */
     @SuppressLint("InlinedApi")
     fun setupMediaSession(context: Context?): MediaSessionCompat? {
-        mediaSession?.release()
+        try {
+            mediaSession?.release()
+        } catch (exception: Exception) {
+            Log.e(TAG, "mediaSession release$exception")
+        }
         context?.let {
-
             val mediaButtonIntent = Intent(Intent.ACTION_MEDIA_BUTTON)
             val pendingIntent = PendingIntent.getBroadcast(
                 context,
@@ -641,6 +645,10 @@ internal class BetterPlayer(
                 }
             })
             mediaSession.isActive = true
+            mediaSession.setFlags(
+                MediaSession.FLAG_HANDLES_MEDIA_BUTTONS or
+                        MediaSession.FLAG_HANDLES_TRANSPORT_CONTROLS
+            )
             val mediaSessionConnector = MediaSessionConnector(mediaSession)
             mediaSessionConnector.setPlayer(exoPlayer)
             this.mediaSession = mediaSession
