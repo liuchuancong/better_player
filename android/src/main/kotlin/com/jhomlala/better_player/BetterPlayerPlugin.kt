@@ -88,7 +88,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             videoPlayers.valueAt(i).dispose()
         }
         videoPlayers.clear()
-        dataSources.clear()
+        dataSources.clear() 
     }
 
     override fun onMethodCall(call: MethodCall, result: MethodChannel.Result) {
