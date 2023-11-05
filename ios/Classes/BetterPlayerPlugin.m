@@ -28,7 +28,7 @@ bool _remoteCommandsInitialized = false;
     BetterPlayerPlugin* instance = [[BetterPlayerPlugin alloc] initWithRegistrar:registrar];
     [registrar addMethodCallDelegate:instance channel:channel];
     //[registrar publish:instance];
-    [registrar registerViewFactory:instance withId:@"com.jhomlala/better_player"];
+    [registrar registerViewFactory:instance withId:@"com.alizda/better_player"];
 }
 
 - (instancetype)initWithRegistrar:(NSObject<FlutterPluginRegistrar>*)registrar {

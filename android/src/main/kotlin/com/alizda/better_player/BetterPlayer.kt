@@ -13,7 +13,8 @@ import android.net.Uri
 import android.os.Build
 import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
-import android.view.Surface
+import android.view.SurfaceView
+import android.view.ViewGroup
 import androidx.lifecycle.Observer
 import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
@@ -24,6 +25,7 @@ import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
 import androidx.media3.common.Timeline
 import androidx.media3.common.TrackSelectionOverride
+import androidx.media3.common.util.UnstableApi
 import androidx.media3.common.util.Util
 import androidx.media3.datasource.DataSource
 import androidx.media3.datasource.DefaultDataSource
@@ -65,18 +67,15 @@ import com.bumptech.glide.request.transition.Transition
 import io.flutter.plugin.common.EventChannel
 import io.flutter.plugin.common.EventChannel.EventSink
 import io.flutter.plugin.common.MethodChannel
-import io.flutter.view.TextureRegistry.SurfaceTextureEntry
 import java.io.File
 import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
-
-@Suppress("NAME_SHADOWING")
 internal class BetterPlayer(
     context: Context,
     private val eventChannel: EventChannel,
-    private val textureEntry: SurfaceTextureEntry,
+    private val surfaceView: SurfaceView,
     customDefaultLoadControl: CustomDefaultLoadControl?,
     result: MethodChannel.Result
 ) {
@@ -86,7 +85,6 @@ internal class BetterPlayer(
         DefaultTrackSelector(context)
     private val loadControl: LoadControl
     private var isInitialized = false
-    private var surface: Surface? = null
     private var key: String? = null
     private var playerNotificationManager: PlayerNotificationManager? = null
     private var bitmap: Bitmap? = null
@@ -98,6 +96,8 @@ internal class BetterPlayer(
         customDefaultLoadControl ?: CustomDefaultLoadControl()
     private var lastSendBufferedPosition = 0L
 
+    val getSurfaceView: SurfaceView
+        get() = surfaceView
     init {
         val loadBuilder = DefaultLoadControl.Builder()
         loadBuilder.setBufferDurationsMs(
@@ -116,7 +116,7 @@ internal class BetterPlayer(
         workManager = WorkManager.getInstance(context)
         mediaSession = MediaSession.Builder(context,exoPlayer).build()
         workerObserverMap = HashMap()
-        setupVideoPlayer(eventChannel, textureEntry, result)
+        setupVideoPlayer(eventChannel, surfaceView, result)
     }
     fun setDataSource(
         context: Context,
@@ -421,7 +421,7 @@ internal class BetterPlayer(
     }
 
     private fun setupVideoPlayer(
-        eventChannel: EventChannel, textureEntry: SurfaceTextureEntry, result: MethodChannel.Result
+        eventChannel: EventChannel, surfaceView: SurfaceView, result: MethodChannel.Result
     ) {
         eventChannel.setStreamHandler(
             object : EventChannel.StreamHandler {
@@ -433,8 +433,7 @@ internal class BetterPlayer(
                     eventSink.setDelegate(null)
                 }
             })
-        surface = Surface(textureEntry.surfaceTexture())
-        exoPlayer?.setVideoSurface(surface)
+        exoPlayer?.setVideoSurfaceView(surfaceView)
         setAudioAttributes(exoPlayer, true)
         exoPlayer?.addListener(object : Player.Listener {
             override fun onPlaybackStateChanged(playbackState: Int) {
@@ -475,7 +474,7 @@ internal class BetterPlayer(
 
         })
         val reply: MutableMap<String, Any> = HashMap()
-        reply["textureId"] = textureEntry.id()
+        reply["textureId"] = surfaceView.id
         result.success(reply)
     }
 
@@ -677,11 +676,11 @@ internal class BetterPlayer(
         }
         disposeMediaSession()
         disposeRemoteNotifications()
-        textureEntry.release()
-        eventChannel.setStreamHandler(null)
-        if (surface != null) {
-            surface?.release()
+        exoPlayer?.clearVideoSurfaceView(surfaceView)
+        if (surfaceView.parent != null) {
+            (surfaceView.parent as ViewGroup).removeView(surfaceView)
         }
+        eventChannel.setStreamHandler(null)
         exoPlayer?.release()
 
     }
@@ -691,12 +690,12 @@ internal class BetterPlayer(
         if (other == null || javaClass != other.javaClass) return false
         val that = other as BetterPlayer
         if (if (exoPlayer != null) exoPlayer != that.exoPlayer else that.exoPlayer != null) return false
-        return if (surface != null) surface == that.surface else that.surface == null
+        return surfaceView == that.surfaceView
     }
 
     override fun hashCode(): Int {
         var result = exoPlayer?.hashCode() ?: 0
-        result = 31 * result + if (surface != null) surface.hashCode() else 0
+        result = 31 * result + surfaceView.hashCode()
         return result
     }
 
