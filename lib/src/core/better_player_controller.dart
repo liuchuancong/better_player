@@ -432,6 +432,8 @@ class BetterPlayerController {
         return VideoFormat.hls;
       case BetterPlayerVideoFormat.ss:
         return VideoFormat.ss;
+      case BetterPlayerVideoFormat.rtsp:
+        return VideoFormat.rtsp;
       case BetterPlayerVideoFormat.other:
         return VideoFormat.other;
     }

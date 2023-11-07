@@ -361,6 +361,7 @@ enum VideoFormat {
   /// Smooth Streaming.
   ss,
 
+  rtsp,
   /// Any format other than the other ones defined in this enum.
   other
 }

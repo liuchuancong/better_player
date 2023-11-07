@@ -3,5 +3,6 @@ enum BetterPlayerVideoFormat {
   dash,
   hls,
   ss,
+  rtsp,
   other,
 }
