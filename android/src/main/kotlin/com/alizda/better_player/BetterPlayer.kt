@@ -41,6 +41,7 @@ import androidx.media3.exoplayer.drm.FrameworkMediaDrm
 import androidx.media3.exoplayer.drm.HttpMediaDrmCallback
 import androidx.media3.exoplayer.drm.LocalMediaDrmCallback
 import androidx.media3.exoplayer.drm.UnsupportedDrmException
+import androidx.media3.exoplayer.hls.HlsMediaSource
 import androidx.media3.exoplayer.hls.HlsMediaSource.*
 import androidx.media3.exoplayer.rtsp.RtspMediaSource
 import androidx.media3.exoplayer.smoothstreaming.DefaultSsChunkSource
@@ -387,7 +388,7 @@ internal class BetterPlayer(
             }
                 .createMediaSource(mediaItem)
 
-            C.CONTENT_TYPE_HLS -> Factory(mediaDataSourceFactory)
+            C.CONTENT_TYPE_HLS -> HlsMediaSource.Factory(mediaDataSourceFactory)
                 .apply {
                     if (drmSessionManagerProvider != null) {
                         setDrmSessionManagerProvider(drmSessionManagerProvider!!)
