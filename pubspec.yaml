@@ -4,8 +4,8 @@ version: 0.0.3
 homepage: https://github.com/liuchuancong/better_player
 
 environment:
-  sdk: '>=3.1.0 <4.0.0'
-  flutter: '>=3.3.0'
+  sdk: ">=3.0.6 <4.0.0"
+  flutter: ">=3.3.0"
 
 dependencies:
   flutter:
@@ -16,7 +16,7 @@ dependencies:
   flutter_widget_from_html_core: ^0.14.4
   visibility_detector: ^0.4.0+2
   path_provider: ^2.0.10
-  collection: ^1.17.2
+  collection: ^1.17.1
   xml: ^6.3.0
 
 dev_dependencies:
