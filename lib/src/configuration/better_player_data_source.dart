@@ -251,4 +251,29 @@ class BetterPlayerDataSource {
           bufferingConfiguration ?? this.bufferingConfiguration,
     );
   }
+
+  BetterPlayerDataSource fromWith({BetterPlayerDataSource? dataSource}) {
+    return BetterPlayerDataSource(
+      dataSource?.type ?? this.type,
+      dataSource?.url ?? this.url,
+      bytes: dataSource?.bytes ?? this.bytes,
+      subtitles: dataSource?.subtitles ?? this.subtitles,
+      liveStream: dataSource?.liveStream ?? this.liveStream,
+      headers: dataSource?.headers ?? this.headers,
+      useAsmsSubtitles: dataSource?.useAsmsSubtitles ?? this.useAsmsSubtitles,
+      useAsmsTracks: dataSource?.useAsmsTracks ?? this.useAsmsTracks,
+      useAsmsAudioTracks: dataSource?.useAsmsAudioTracks ?? this.useAsmsAudioTracks,
+      resolutions: dataSource?.resolutions ?? this.resolutions,
+      cacheConfiguration: dataSource?.cacheConfiguration ?? this.cacheConfiguration,
+      notificationConfiguration:
+          dataSource?.notificationConfiguration ?? this.notificationConfiguration,
+      overriddenDuration: dataSource?.overriddenDuration ?? this.overriddenDuration,
+      videoFormat: dataSource?.videoFormat ?? this.videoFormat,
+      videoExtension: dataSource?.videoExtension ?? this.videoExtension,
+      drmConfiguration: dataSource?.drmConfiguration ?? this.drmConfiguration,
+      placeholder: dataSource?.placeholder ?? this.placeholder,
+      bufferingConfiguration:
+          dataSource?.bufferingConfiguration ?? this.bufferingConfiguration,
+    );
+  }
 }
