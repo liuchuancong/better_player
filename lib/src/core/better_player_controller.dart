@@ -957,14 +957,14 @@ class BetterPlayerController {
   }
 
   ///Set different resolution (quality) for video
-  void setResolution(String url) async {
+  void setResolution(String url,{BetterPlayerVideoFormat? videoFormat }) async {
     if (videoPlayerController == null) {
       throw StateError("The data source has not been initialized");
     }
     final position = await videoPlayerController!.position;
     final wasPlayingBeforeChange = isPlaying()!;
     pause();
-    await setupDataSource(betterPlayerDataSource!.copyWith(url: url));
+    await setupDataSource(betterPlayerDataSource!.copyWith(url: url,videoFormat: videoFormat ?? null));
     seekTo(position!);
     if (wasPlayingBeforeChange) {
       play();
