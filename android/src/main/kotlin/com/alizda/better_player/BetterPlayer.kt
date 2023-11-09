@@ -11,7 +11,6 @@ import android.graphics.Bitmap
 import android.graphics.drawable.Drawable
 import android.net.Uri
 import android.os.Build
-import android.support.v4.media.session.MediaSessionCompat
 import android.util.Log
 import android.view.Surface
 import androidx.lifecycle.Observer
@@ -112,7 +111,6 @@ import kotlin.math.min
                 .setLoadControl(loadControl)
                 .build()
         workManager = WorkManager.getInstance(context)
-        mediaSession = MediaSession.Builder(context,exoPlayer).build()
         workerObserverMap = HashMap()
         setupVideoPlayer(eventChannel, textureEntry, result)
     }
@@ -292,33 +290,24 @@ import kotlin.math.min
                 setUseStopAction(false)
             }
             setupMediaSession(context)?.let {
-                setMediaSessionToken(it.sessionToken)
+                setMediaSessionToken(it.sessionCompatToken)
             }
         }
         exoPlayer?.seekTo(0)
     }
     @SuppressLint("InlinedApi")
-    fun setupMediaSession(context: Context?): MediaSessionCompat? {
+    fun setupMediaSession(context: Context?): MediaSession? {
         context?.let {
-
-            val mediaButtonIntent = Intent(Intent.ACTION_MEDIA_BUTTON)
-            val pendingIntent = PendingIntent.getBroadcast(
-                context,
-                0, mediaButtonIntent,
-                PendingIntent.FLAG_IMMUTABLE
-            )
-            val mediaSession = MediaSessionCompat(context, TAG, null, pendingIntent)
-            mediaSession.setCallback(object : MediaSessionCompat.Callback() {
-                override fun onSeekTo(pos: Long) {
-                    sendSeekToEvent(pos)
-                    super.onSeekTo(pos)
-                }
-            })
-            mediaSession.isActive = true
-            return mediaSession
+            if(this.mediaSession != null) {
+                this.mediaSession!!.release()
+            }
+            this.mediaSession = this.exoPlayer?.let { it1 ->
+                MediaSession.Builder(context!!,
+                    it1
+                ).build()
+            }
         }
-        return null
-
+        return this.mediaSession
     }
     private fun sendSeekToEvent(positionMs: Long) {
         exoPlayer?.seekTo(positionMs)
