@@ -470,7 +470,8 @@ class BetterPlayerController {
           drmHeaders: _betterPlayerDataSource?.drmConfiguration?.headers,
           activityName:
               _betterPlayerDataSource?.notificationConfiguration?.activityName,
-          packageName: _betterPlayerDataSource?.notificationConfiguration?.packageName,
+          packageName:
+              _betterPlayerDataSource?.notificationConfiguration?.packageName,
           clearKey: _betterPlayerDataSource?.drmConfiguration?.clearKey,
           videoExtension: _betterPlayerDataSource!.videoExtension,
         );
@@ -498,8 +499,8 @@ class BetterPlayerController {
             overriddenDuration: _betterPlayerDataSource!.overriddenDuration,
             activityName: _betterPlayerDataSource
                 ?.notificationConfiguration?.activityName,
-             packageName: _betterPlayerDataSource
-                ?.notificationConfiguration?.packageName,
+            packageName:
+                _betterPlayerDataSource?.notificationConfiguration?.packageName,
             clearKey: _betterPlayerDataSource?.drmConfiguration?.clearKey);
         break;
       case BetterPlayerDataSourceType.memory:
@@ -629,6 +630,20 @@ class BetterPlayerController {
       _postEvent(BetterPlayerEvent(BetterPlayerEventType.play));
       _postControllerEvent(BetterPlayerControllerEvent.play);
     }
+  }
+
+  ///Start video playback. Play will be triggered only if current lifecycle state
+  ///is resumed.
+  Future<void> startPlay() async {
+    if (videoPlayerController == null) {
+      throw StateError("The data source has not been initialized");
+    }
+
+    await videoPlayerController!.play();
+    _hasCurrentDataSourceStarted = true;
+    _wasPlayingBeforePause = null;
+    _postEvent(BetterPlayerEvent(BetterPlayerEventType.play));
+    _postControllerEvent(BetterPlayerControllerEvent.play);
   }
 
   ///Enables/disables looping (infinity playback) mode.
@@ -957,14 +972,15 @@ class BetterPlayerController {
   }
 
   ///Set different resolution (quality) for video
-  void setResolution(String url,{BetterPlayerVideoFormat? videoFormat }) async {
+  void setResolution(String url, {BetterPlayerVideoFormat? videoFormat}) async {
     if (videoPlayerController == null) {
       throw StateError("The data source has not been initialized");
     }
     final position = await videoPlayerController!.position;
     final wasPlayingBeforeChange = isPlaying()!;
     pause();
-    await setupDataSource(betterPlayerDataSource!.copyWith(url: url,videoFormat: videoFormat ?? null));
+    await setupDataSource(betterPlayerDataSource!
+        .copyWith(url: url, videoFormat: videoFormat ?? null));
     seekTo(position!);
     if (wasPlayingBeforeChange) {
       play();
