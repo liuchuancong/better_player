@@ -429,16 +429,8 @@ import kotlin.math.min
         exoPlayer?.setVideoSurface(surface)
         setAudioAttributes(exoPlayer, true)
         exoPlayer?.addListener(object : Player.Listener {
-            override fun onIsPlayingChanged(isPlaying: Boolean) {
-               if(backplay){
-                   exoPlayer?.play()
-               }
-                super.onIsPlayingChanged(isPlaying)
-            }
             override fun onPlaybackStateChanged(playbackState: Int) {
-
                 when (playbackState) {
-
                     Player.STATE_BUFFERING -> {
                         sendBufferingUpdate(true)
                         val event: MutableMap<String, Any> = HashMap()
