@@ -94,7 +94,7 @@ import kotlin.math.min
     private val customDefaultLoadControl: CustomDefaultLoadControl =
         customDefaultLoadControl ?: CustomDefaultLoadControl()
     private var lastSendBufferedPosition = 0L
-
+    private var backplay : Boolean = false
     init {
         val loadBuilder = DefaultLoadControl.Builder()
         loadBuilder.setBufferDurationsMs(
@@ -131,6 +131,9 @@ import kotlin.math.min
         clearKey: String?
     ) {
         this.key = key
+        if(isInitialized){
+            exoPlayer?.clearMediaItems()
+        }
         isInitialized = false
         val uri = Uri.parse(dataSource)
         var dataSourceFactory: DataSource.Factory?
@@ -212,6 +215,8 @@ import kotlin.math.min
         activityName: String,
         packageName: String
     ) {
+
+        backplay = true
         val mediaDescriptionAdapter: PlayerNotificationManager.MediaDescriptionAdapter = object :
             PlayerNotificationManager.MediaDescriptionAdapter {
             override fun getCurrentContentTitle(player: Player): String {
@@ -287,12 +292,13 @@ import kotlin.math.min
                 setPlayer(ForwardingPlayer(exoPlayer))
                 setUseNextAction(false)
                 setUsePreviousAction(false)
-                setUseStopAction(false)
+                setUseStopAction(true)
             }
             setupMediaSession(context)?.let {
                 setMediaSessionToken(it.sessionCompatToken)
             }
         }
+
         exoPlayer?.seekTo(0)
     }
     @SuppressLint("InlinedApi")
@@ -302,7 +308,8 @@ import kotlin.math.min
                 this.mediaSession!!.release()
             }
             this.mediaSession = this.exoPlayer?.let { it1 ->
-                MediaSession.Builder(context!!,
+                MediaSession.Builder(
+                    context,
                     it1
                 ).build()
             }
@@ -422,8 +429,16 @@ import kotlin.math.min
         exoPlayer?.setVideoSurface(surface)
         setAudioAttributes(exoPlayer, true)
         exoPlayer?.addListener(object : Player.Listener {
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+               if(backplay){
+                   exoPlayer?.play()
+               }
+                super.onIsPlayingChanged(isPlaying)
+            }
             override fun onPlaybackStateChanged(playbackState: Int) {
+
                 when (playbackState) {
+
                     Player.STATE_BUFFERING -> {
                         sendBufferingUpdate(true)
                         val event: MutableMap<String, Any> = HashMap()

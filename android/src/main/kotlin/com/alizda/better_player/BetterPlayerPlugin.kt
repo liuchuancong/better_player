@@ -33,8 +33,6 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private val videoPlayers = LongSparseArray<BetterPlayer>()
     private val dataSources = LongSparseArray<Map<String, Any?>>()
     private var flutterState: FlutterState? = null
-    private var currentNotificationTextureId: Long = -1
-    private var currentNotificationDataSource: Map<String, Any?>? = null
     private var activity: Activity? = null
     private var pipHandler: Handler? = null
     private var pipRunnable: Runnable? = null
@@ -356,13 +354,6 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             val textureId = getTextureId(betterPlayer)
             if (textureId != null) {
                 val dataSource = dataSources[textureId]
-                //Don't setup notification for the same source.
-                if (textureId == currentNotificationTextureId && currentNotificationDataSource != null && dataSource != null && currentNotificationDataSource === dataSource) {
-                    return
-                }
-                currentNotificationDataSource = dataSource
-                currentNotificationTextureId = textureId
-                removeOtherNotificationListeners()
                 val showNotification = getParameter(dataSource, SHOW_NOTIFICATION_PARAMETER, false)
                 if (showNotification) {
                     val title = getParameter(dataSource, TITLE_PARAMETER, "")
@@ -440,6 +431,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
 
     @UnstableApi private fun dispose(player: BetterPlayer, textureId: Long) {
         player.dispose()
+        removeOtherNotificationListeners()
         videoPlayers.remove(textureId)
         dataSources.remove(textureId)
         stopPipHandler()
