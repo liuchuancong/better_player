@@ -18,6 +18,7 @@ import androidx.media3.common.AudioAttributes
 import androidx.media3.common.C
 import androidx.media3.common.ForwardingPlayer
 import androidx.media3.common.MediaItem
+import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.PlaybackParameters
 import androidx.media3.common.Player
@@ -70,7 +71,8 @@ import java.util.*
 import kotlin.math.max
 import kotlin.math.min
 
-@UnstableApi internal class BetterPlayer(
+@UnstableApi
+internal class BetterPlayer(
     context: Context,
     private val eventChannel: EventChannel,
     private val textureEntry: SurfaceTextureEntry,
@@ -94,7 +96,8 @@ import kotlin.math.min
     private val customDefaultLoadControl: CustomDefaultLoadControl =
         customDefaultLoadControl ?: CustomDefaultLoadControl()
     private var lastSendBufferedPosition = 0L
-    private var backplay : Boolean = false
+    private var backplay: Boolean = false
+
     init {
         val loadBuilder = DefaultLoadControl.Builder()
         loadBuilder.setBufferDurationsMs(
@@ -114,6 +117,7 @@ import kotlin.math.min
         workerObserverMap = HashMap()
         setupVideoPlayer(eventChannel, textureEntry, result)
     }
+
     fun setDataSource(
         context: Context,
         key: String?,
@@ -128,10 +132,13 @@ import kotlin.math.min
         licenseUrl: String?,
         drmHeaders: Map<String, String>?,
         cacheKey: String?,
-        clearKey: String?
+        clearKey: String?,
+        title: String?,
+        author: String?,
+        imageUrl: String?
     ) {
         this.key = key
-        if(isInitialized){
+        if (isInitialized) {
             exoPlayer?.clearMediaItems()
         }
         isInitialized = false
@@ -199,7 +206,7 @@ import kotlin.math.min
         } else {
             dataSourceFactory = DefaultDataSource.Factory(context)
         }
-        val mediaSource = buildMediaSource(uri, dataSourceFactory, formatHint, cacheKey, context)
+        val mediaSource = buildMediaSource(uri, dataSourceFactory, formatHint, cacheKey, context,title,author,imageUrl)
         if (overriddenDuration != 0L) {
             val clippingMediaSource = ClippingMediaSource(mediaSource, 0, overriddenDuration * 1000)
             exoPlayer?.setMediaSource(clippingMediaSource)
@@ -209,6 +216,7 @@ import kotlin.math.min
         exoPlayer?.prepare()
         result.success(null)
     }
+
     fun setupPlayerNotification(
         context: Context, title: String, author: String?,
         imageUrl: String?, notificationChannelName: String?,
@@ -301,10 +309,11 @@ import kotlin.math.min
 
         exoPlayer?.seekTo(0)
     }
+
     @SuppressLint("InlinedApi")
     fun setupMediaSession(context: Context?): MediaSession? {
         context?.let {
-            if(this.mediaSession != null) {
+            if (this.mediaSession != null) {
                 this.mediaSession!!.release()
             }
             this.mediaSession = this.exoPlayer?.let { it1 ->
@@ -316,6 +325,7 @@ import kotlin.math.min
         }
         return this.mediaSession
     }
+
     private fun sendSeekToEvent(positionMs: Long) {
         exoPlayer?.seekTo(positionMs)
         val event: MutableMap<String, Any> = HashMap()
@@ -323,6 +333,7 @@ import kotlin.math.min
         event["position"] = positionMs
         eventSink.success(event)
     }
+
     fun disposeRemoteNotifications() {
         if (playerNotificationManager != null) {
             playerNotificationManager?.setPlayer(null)
@@ -336,7 +347,10 @@ import kotlin.math.min
         mediaDataSourceFactory: DataSource.Factory,
         formatHint: String?,
         cacheKey: String?,
-        context: Context
+        context: Context,
+        title: String?,
+        author: String?,
+        imageUrl: String?
     ): MediaSource {
         val type: Int = if (formatHint == null) {
             Util.inferContentType(uri)
@@ -356,7 +370,8 @@ import kotlin.math.min
         if (!cacheKey.isNullOrEmpty()) {
             mediaItemBuilder.setCustomCacheKey(cacheKey)
         }
-        val mediaItem = mediaItemBuilder.build()
+        var mediaMetadata = MediaMetadata.Builder().setTitle(title).setSubtitle(author).setArtworkUri(Uri.parse(imageUrl)).build()
+        val mediaItem = mediaItemBuilder.setMediaMetadata(mediaMetadata).build()
         var drmSessionManagerProvider: DrmSessionManagerProvider? = null
         drmSessionManager?.let { drmSessionManager ->
             drmSessionManagerProvider = DrmSessionManagerProvider { drmSessionManager }
@@ -429,6 +444,19 @@ import kotlin.math.min
         exoPlayer?.setVideoSurface(surface)
         setAudioAttributes(exoPlayer, true)
         exoPlayer?.addListener(object : Player.Listener {
+
+            override fun onIsPlayingChanged(isPlaying: Boolean) {
+                val event: MutableMap<String, Any> = HashMap()
+                if(isPlaying){
+                    event["event"] = "play"
+                    eventSink.success(event)
+                }else{
+                    event["event"] = "pause"
+                    eventSink.success(event)
+                }
+
+                super.onIsPlayingChanged(isPlaying)
+            }
             override fun onPlaybackStateChanged(playbackState: Int) {
                 when (playbackState) {
                     Player.STATE_BUFFERING -> {

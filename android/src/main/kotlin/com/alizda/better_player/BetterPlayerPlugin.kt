@@ -33,6 +33,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
     private val videoPlayers = LongSparseArray<BetterPlayer>()
     private val dataSources = LongSparseArray<Map<String, Any?>>()
     private var flutterState: FlutterState? = null
+    private var currentNotificationTextureId: Long = -1
+    private var currentNotificationDataSource: Map<String, Any?>? = null
     private var activity: Activity? = null
     private var pipHandler: Handler? = null
     private var pipRunnable: Runnable? = null
@@ -230,6 +232,9 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
         dataSources.put(getTextureId(player)!!, dataSource)
         val key = getParameter(dataSource, KEY_PARAMETER, "")
         val headers: Map<String, String> = getParameter(dataSource, HEADERS_PARAMETER, HashMap())
+        val title = getParameter(dataSource, TITLE_PARAMETER, "")
+        val author = getParameter(dataSource, AUTHOR_PARAMETER, "")
+        val imageUrl = getParameter(dataSource, IMAGE_URL_PARAMETER, "")
         val overriddenDuration: Number = getParameter(dataSource, OVERRIDDEN_DURATION_PARAMETER, 0)
         if (dataSource[ASSET_PARAMETER] != null) {
             val asset = getParameter(dataSource, ASSET_PARAMETER, "")
@@ -255,7 +260,7 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 0L,
                 overriddenDuration.toLong(),
                 null,
-                null, null, null
+                null, null, null,title,author,imageUrl
             )
         } else {
             val useCache = getParameter(dataSource, USE_CACHE_PARAMETER, false)
@@ -285,7 +290,8 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
                 licenseUrl,
                 drmHeaders,
                 cacheKey,
-                clearKey
+                clearKey,
+                title,author,imageUrl
             )
         }
     }
@@ -354,6 +360,11 @@ class BetterPlayerPlugin : FlutterPlugin, ActivityAware, MethodCallHandler {
             val textureId = getTextureId(betterPlayer)
             if (textureId != null) {
                 val dataSource = dataSources[textureId]
+                if (textureId == currentNotificationTextureId && currentNotificationDataSource != null && dataSource != null && currentNotificationDataSource === dataSource) {
+                    return
+                }
+                currentNotificationDataSource = dataSource
+                currentNotificationTextureId = textureId
                 val showNotification = getParameter(dataSource, SHOW_NOTIFICATION_PARAMETER, false)
                 if (showNotification) {
                     val title = getParameter(dataSource, TITLE_PARAMETER, "")
