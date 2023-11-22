@@ -1,5 +1,6 @@
 package com.alizda.better_player
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.util.Log
 import androidx.media3.database.StandaloneDatabaseProvider
@@ -10,6 +11,7 @@ import java.io.File
 object BetterPlayerCache {
     @Volatile
     private var instance: SimpleCache? = null
+    @SuppressLint("UnsafeOptInUsageError")
     fun createCache(context: Context, cacheFileSize: Long): SimpleCache? {
         if (instance == null) {
             synchronized(BetterPlayerCache::class.java) {
