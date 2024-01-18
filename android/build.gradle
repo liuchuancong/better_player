@@ -6,7 +6,7 @@ buildscript {
     ext.lifecycleVersion = "2.6.2"
     ext.annotationVersion = "1.7.0"
     ext.workVersion = "2.8.1"
-    ext.media3Version = '1.2.0'
+    ext.media3Version = '1.2.1'
     repositories {
         google()
         mavenCentral()
