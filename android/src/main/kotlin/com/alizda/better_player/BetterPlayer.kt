@@ -5,6 +5,7 @@ import android.annotation.SuppressLint
 import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.PendingIntent
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
@@ -49,7 +50,9 @@ import androidx.media3.exoplayer.source.DefaultMediaSourceFactory
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.exoplayer.trackselection.DefaultTrackSelector
+import androidx.media3.session.MediaController
 import androidx.media3.session.MediaSession
+import androidx.media3.session.SessionToken
 import androidx.media3.ui.PlayerNotificationManager
 import androidx.work.Data
 import androidx.work.OneTimeWorkRequest
@@ -115,6 +118,7 @@ internal class BetterPlayer(
                 .build()
         workManager = WorkManager.getInstance(context)
         workerObserverMap = HashMap()
+        mediaSession = MediaSession.Builder(context, exoPlayer).build()
         setupVideoPlayer(eventChannel, textureEntry, result)
     }
 
@@ -224,7 +228,8 @@ internal class BetterPlayer(
         packageName: String
     ) {
 
-        backplay = true
+        val sessionToken = SessionToken(context, ComponentName(context, PlaybackService::class.java))
+        val controllerFuture = MediaController.Builder(context, sessionToken).buildAsync()
         val mediaDescriptionAdapter: PlayerNotificationManager.MediaDescriptionAdapter = object :
             PlayerNotificationManager.MediaDescriptionAdapter {
             override fun getCurrentContentTitle(player: Player): String {
@@ -232,18 +237,7 @@ internal class BetterPlayer(
             }
 
             override fun createCurrentContentIntent(player: Player): PendingIntent? {
-                val notificationIntent = Intent()
-                notificationIntent.setClassName(
-                    packageName,
-                    activityName
-                )
-                notificationIntent.flags = (Intent.FLAG_ACTIVITY_CLEAR_TOP
-                        or Intent.FLAG_ACTIVITY_SINGLE_TOP)
-                return PendingIntent.getActivity(
-                    context, 0,
-                    notificationIntent,
-                    PendingIntent.FLAG_IMMUTABLE
-                )
+                return controllerFuture.get().sessionActivity
             }
 
             override fun getCurrentContentText(player: Player): String? {
@@ -302,30 +296,9 @@ internal class BetterPlayer(
                 setUsePreviousAction(false)
                 setUseStopAction(true)
             }
-            setupMediaSession(context)?.let {
-                setMediaSessionToken(it.sessionCompatToken)
-            }
         }
-
         exoPlayer?.seekTo(0)
     }
-
-    @SuppressLint("InlinedApi")
-    fun setupMediaSession(context: Context?): MediaSession? {
-        context?.let {
-            if (this.mediaSession != null) {
-                this.mediaSession!!.release()
-            }
-            this.mediaSession = this.exoPlayer?.let { it1 ->
-                MediaSession.Builder(
-                    context,
-                    it1
-                ).build()
-            }
-        }
-        return this.mediaSession
-    }
-
     private fun sendSeekToEvent(positionMs: Long) {
         exoPlayer?.seekTo(positionMs)
         val event: MutableMap<String, Any> = HashMap()
